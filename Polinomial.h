@@ -13,13 +13,13 @@ class Polinomial {
 public:
 	Polinomial();
 	Polinomial(const T* coeff, int degree);
-	Polynomial(const Polynomial<T>& other);
-	~Polynomial();
+	Polinomial(const Polinomial<T>& other);
+	~Polinomial();
 
 	void set_coeff(const T coeff);
 	void set_degree(const int degree);
 	T get_coeff() const;
-	T get_degree() const;
+	int get_degree() const;
 
 	Polynomial operator+(const Polinomial& other) const;
 	Polynomial operator-(const Polinomial& other) const;
@@ -30,5 +30,6 @@ public:
 
 	friend std::ostream& operator <<(std::ostream& os, const Polynomial poly);
 
-};
+	};
+
 
