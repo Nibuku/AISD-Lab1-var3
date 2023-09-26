@@ -49,3 +49,12 @@ Polinomial<T>::Polinomial(const Polinomial<T>& other) {
 	}
 }
 
+template<typename T>
+Polinomial<T>::~Polinomial() {
+	for (int i = 0; i < _size; ++i) {
+		delete _coeff[i];
+	}
+	_coeff = nullptr;
+	_degree = 0;
+}
+

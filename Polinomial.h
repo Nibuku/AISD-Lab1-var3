@@ -8,7 +8,6 @@ class Polinomial {
 	T* _coeff;
 	int _degree;
 
-	void shrink_to_fit();
 
 public:
 	Polinomial();
@@ -21,15 +20,15 @@ public:
 	T get_coeff() const;
 	int get_degree() const;
 
-	Polynomial operator+(const Polinomial& other) const;
-	Polynomial operator-(const Polinomial& other) const;
-	Polynomial operator*(double value) const;
+	Polinomial operator+(const Polinomial& other) const;
+	Polinomial operator-(const Polinomial& other) const;
+	Polinomial operator*(double value) const;
 
-	bool operator==(Polynomial& other) const;
-	bool operator!=(Polynomial& other)const;
+	bool operator==(Polinomial& other) const;
+	bool operator!=(Polinomial& other)const;
 
-	friend std::ostream& operator <<(std::ostream& os, const Polynomial poly);
+	void shrink_to_fit();
+
+	friend std::ostream& operator <<(std::ostream& os, const Polinomial poly);
 
 	};
-
-
