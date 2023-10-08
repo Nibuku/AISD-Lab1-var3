@@ -18,5 +18,8 @@
     <ClCompile Include="polinomial.cc">
       <Filter>include</Filter>
     </ClCompile>
+    <ClCompile Include="polinomial.cpp">
+      <Filter>include</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
