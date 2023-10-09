@@ -1,3 +1,4 @@
-int main() {
-	return 0;
-}
+//#include "polinomial.cpp"
+
+//template <Polinomial T,  int V>
+
