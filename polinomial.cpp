@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <complex>
 #include <cmath>
+#define M_PI (3.141592653589793)    
+#define M_2PI (2.*M_PI)
 
 using namespace std;
 template <typename T>
@@ -441,40 +443,81 @@ std::ostream& operator<<(std::ostream& os, const Polinomial<T> poly) {
 }
 
 template<typename T>
-T find_zero(const Polinomial<T> poly) {
-	if (poly.get_degree() == 3)
-	{
-		throw std::runtime_error("Uncorrect degree");
-	}
-	T c = poly.get_coeff(0);
-	T d = poly.get_coeff(1);
-	T b = poly.get_coeff(2);
-	T a = poly.get_coeff(3);
-
-	T discr = b * b - 3 * a * c;
-	T sqrt_discr = std::sqrt(std::abs(discr));
-	T cuberoot;
-	if (discr < 0)
-		return false;
-	if (discr > 0) {
-		cuberoot = (-b + sqrt_discr) / (3 * a);
+T find_zero(T d, T a, T b, T c) {
+	T x[3];
+	T q, r, r2, q3;
+	q = (a * a - 3. * b) / 9.;
+	r = ((2. * a * a - 9. *a * b) + 27. * c) / 54.;
+	r2 = r * r;
+	q3 = q * q * q;
+	if (r2 < q3) {
+		T t = acos(r / sqrt(q3))/3.;
+		q = -2. * sqrt(q);
+		x[0] = q * cos(t / 3.) -(a/3.);
+		x[1] = q * cos((t + M_2PI) / 3.) - (a / 3.);
+		x[2] = q * cos((t - M_2PI) / 3.) - (a / 3.);
+		for (int i=0; i <= 2; ++i) {
+			return x[i];
+		}
 	}
 	else {
-		cuberoot = (-b) / (3 * a);
+		T aa, bb;
+		if (r <= 0.) 
+			r = -r;
+		aa = -pow(r + sqrt(r2 - q3), 1. / 3.);
+		if (aa != 0.) 
+			bb = q / aa;
+		else bb = 0.;
+		q = aa + bb;
+		r = aa - bb;
+		x[0] = q - a/3.;
+		x[1] = (-0.5) * q - a/3.;
+		x[2] = (sqrt(3.) * 0.5) * fabs(r);
+		if (x[2] == 0.)
+		{
+			for (int i=0; i <= 1; ++i) {
+				return x[i];
+			}
+		}
+		
+		return x[0];
+	
+
+	}
+}
+/*template<typename T>
+T find_zero(T a, T b, T c, T d)
+{
+	T discr = (b * b) - (3 * a * c);
+
+	if (a == 0 || discr < 0) {
+		std::cout << "Нет действительных корней" << endl;
+		return;
 	}
 
-	std::complex<T> first_root = cuberoot;
-	std::complex<T> omega = std::complex<double>(-0.5, std::sqrt(3.0) / 2.0);
-	std::complex<T> second_root = omega * cuberoot;
-	std::complex<T> third_root = omega * omega * cuberoot;
+	T x1, x2, x3;
 
-	std::complex<T> first_value = a * first_root * first_root * first_root+ b * first_root * first_root+ c * first_root+ d;
-	std::complex<T> second_value = a * second_root * second_root * second_root+ b * second_root * second_root+ c * second_root+ d;
-	std::complex<T> third_value = a * third_root * third_root * third_root+ b * third_root * third_root+ c * third_root+ d;
-	cout << first_value << endl;
-	cout << second_value << endl;
-	cout << third_value << endl;
-}
+	if (discr == 0) {
+		x1 = (-b / (3 * a));
+		std::cout << "Один действительный корень: " << x1 << endl;
+	}
+	if (discr > 0) {
+		T disc_sqrt = sqrt(discr);
+		T temp;
+		temp = (-b + disc_sqrt) / (3 * a);
+		x1 = temp;
+		temp = (-b - disc_sqrt) / (3 * a);
+		if (temp != x1) {
+			x2 = temp;
+			std::cout << "Два действительных корня: " << x1 << ", " << x2 << endl;
+		}
+		else {
+			std::cout << "Один действительный корень: " << x1 << endl;
+		};
+
+	} return x1;
+}*/
+
 
 
 
@@ -546,13 +589,20 @@ int main() {
 	s.set_coeff( 3, 2, 2);
 	s.set_coeff(3, 4, 1);
 	std::cout << s;
-	std::cout << "Сложение комплексных и вычитание многочленов:"<<endl;
+	std::cout << "Сложение и вычитание комплексных многочленов:"<<endl;
 	Polinomial <std::complex<double>> m = s + v;
 	std::cout << m<<endl;
 	m = s - v;
 	std::cout << m << endl;
 
-	cout << find_zero(t) <<endl;
+	Polinomial<double> r = Polinomial<double>(3);
+	r.set_coeff(1, 3);
+	r.set_coeff(-3, 2);
+	r.set_coeff(-10, 1);
+	r.set_coeff(24, 0);
+	std::cout << r << endl;
+	std::cout << find_zero(0, -3, -10, 24);
+
 
 	return 0;
 }
