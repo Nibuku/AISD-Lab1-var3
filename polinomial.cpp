@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <complex>
 #include <cmath>
+#include <math.h>
 #define M_PI (3.141592653589793)    
 #define M_2PI (2.*M_PI)
 
@@ -30,7 +31,6 @@ public:
 	void set_coeff(double re, double im, int degree);
 	void set_degree(const int degree);
 	T get_coeff(int degree) const;
-	complex<T> set_coeff(int degree);
 	int get_degree() const;
 
 	Polinomial<T>& operator+(const Polinomial<T>& other) const;
@@ -66,7 +66,7 @@ void Polinomial<T>::set_coeff(const T coeff, int degree) {
 	if (degree < 0 || degree > _degree) {
 		throw std::runtime_error("Degree must be positive and less, that degree polimomial");
 	}
-	if (degree == 1) {
+	if (degree == 0) {
 		_coeff[degree] = 1;
 	}
 	_coeff[degree] = coeff;
@@ -78,7 +78,7 @@ void Polinomial<T>::set_coeff( double re, double im, int degree)
 	if (degree < 0 || degree > _degree) {
 		throw std::runtime_error("Degree must be positive and less, that degree polimomial");
 	}
-	if (degree == 1) {
+	if (degree == 0) {
 		_coeff[degree].real(1);
 		_coeff[degree].imag(1);
 	}
@@ -107,9 +107,6 @@ T Polinomial<T>::get_coeff(int deg) const {
 	return T();
 }
 
-
-
-
 //три конструктора
 template<typename T>
 Polinomial<T>::Polinomial() : _degree(0) {
@@ -130,7 +127,7 @@ template<typename T>
 	_coeff = new complex<T>[_degree + 1];
 	for (int i = 0; i <= _degree; ++i) {
 		_coeff[i]->real(coeff[i].real());
-		_coeff[i]->imag(coeff[i].real());
+		_coeff[i]->imag(coeff[i].imag());
 	}
 }
 
@@ -149,7 +146,7 @@ Polinomial<T>::Polinomial(const Polinomial<complex<T>>& other) {
 	_coeff = new complex<T>[_degree + 1];
 	for (int i = 0; i <= _degree; ++i) {
 		_coeff[i]->real(_coeff[i].real());
-		_coeff[i]->imag(_coeff[i].real());
+		_coeff[i]->imag(_coeff[i].imag());
 	};
 }
 
@@ -158,7 +155,7 @@ Polinomial<T>::Polinomial(const int max_degree) : _degree(max_degree) {
 	_coeff = new T[_degree + 1];
 	_coeff[0] = 1;
 	for (int i = 1; i <= _degree; ++i) {
-		_coeff[i]=1;
+		_coeff[i]=0;
 	}
 }
 
@@ -169,38 +166,71 @@ Polinomial<T>::~Polinomial() {
 	_degree = 0;
 }
 
+template<typename T>
+bool Polinomial<T>::expand(const int degree) {
+	if (degree <= _degree)
+		throw std::runtime_error("Degree must be positive and less, that degree polimomial");
+	T* new_coeff = new T[degree + 1];
+	for (int i = 0; i <= _degree; ++i) {
+		new_coeff[i] = _coeff[i];
+		
+	}
+	_degree = degree;
+	delete[] _coeff;
+	_coeff = new_coeff;
+	return true;
+}
+
 template <typename T>
 Polinomial<T>& Polinomial<T>::operator+=(const Polinomial<T>& other) {
 	if (_degree >= other._degree) {
+
 		for (int i = 0; i <= other._degree; i++)
 		{
 			_coeff[i] += other._coeff[i];
 		}
+		
+
 	}
 	else {
-		_degree = other._degree;
-		for (int i = 0; i <= _degree; i++)
-		{
+		int r = _degree;
+		for (int i = 0; i <= _degree; ++i) {
 			_coeff[i] += other._coeff[i];
 		}
-	}
-	return *this;
+		this->expand(other._degree); 
+		for (int i = 0; i <= _degree; ++i) {
+			if (i > r) {
+				_coeff[i]= other._coeff[i];
+			}
+		}
 
+
+	}return *this;
+	
 }
 
 template <typename T>
 Polinomial<complex<T>>& Polinomial<T>::operator+=(const Polinomial<complex<T>>& other) {
-	if (_degree <= other._degree) {
+	if (_degree >= other._degree) {
 		for (int i = 0; i <= other._degree; i++) {
 			_coeff[i].real() += other._coeff[i].real();
 			_coeff[i].imag() += other._coeff[i].imag();
 		}
 	}
 	else {
+		int r = _degree;
 		_degree = other._degree;
 		for (int i = 0; i <= _degree; i++)
-		{ _coeff[i].real() += other._coeff[i].real();
-		  _coeff[i].imag() += other._coeff[i].imag();
+		{
+			_coeff[i].real() += other._coeff[i].real();
+			_coeff[i].imag() += other._coeff[i].imag();
+		}
+		this->expand(other._degree);
+		for (int i = 0; i <= _degree; ++i) {
+			if (i > r) {
+				_coeff[i].real() = other._coeff[i].real();
+				_coeff[i].imag() = other._coeff[i].imag();
+			}
 		}
 	}
 	return *this;
@@ -224,19 +254,27 @@ Polinomial<complex<T>>& Polinomial<T>:: operator+(const Polinomial<complex<T>>& 
 
 template <typename T>
 Polinomial<T>& Polinomial<T>:: operator-=(const Polinomial<T>& other) {
-	if (_degree <= other._degree) {
+	if (_degree >= other._degree) {
 		for (int i = 0; i <= other._degree; i++)
 		{
 			_coeff[i] -= other._coeff[i];
 		}
 	}
 	else {
+		int r = _degree;
 		_degree = other._degree;
 		for (int i = 0; i <= _degree; i++)
 		{
-			_coeff[i] -= other._coeff[i];
+			other._coeff[i]-=_coeff[i];
+		}
+		this->expand(other._degree);
+		for (int i = 0; i <= _degree; ++i) {
+			if (i > r) {
+				_coeff[i] = other._coeff[i];
+			}
 		}
 	}
+	this->shrink_to_fit();
 	return *this;
 
 }
@@ -245,18 +283,27 @@ template <typename T>
 Polinomial<complex<T>>& Polinomial<T>:: operator-=(const Polinomial<complex<T>>& other) {
 	if (_degree <= other._degree) {
 		for (int i = 0; i <= other._degree; i++) {
-			_coeff[i].real() += other._coeff[i].real();
-			_coeff[i].imag() += other._coeff[i].imag();
+			_coeff[i].real() -= other._coeff[i].real();
+			_coeff[i].imag() -= other._coeff[i].imag();
 		}
 	}
 	else {
+		int r = _degree;
 		_degree = other._degree;
 		for (int i = 0; i <= _degree; i++)
 		{
-			_coeff[i].real() += other._coeff[i].real();
-			_coeff[i].imag() += other._coeff[i].imag();
+			other._coeff[i].real() -= _coeff[i].real();
+			other._coeff[i].imag()-=_coeff[i].imag();
+		}
+		this->expand(other._degree);
+		for (int i = 0; i <= _degree; ++i) {
+			if (i > r) {
+				other._coeff[i].real() = _coeff[i].real();
+				other._coeff[i].imag() = _coeff[i].imag();
+			}
 		}
 	}
+	this->shrink_to_fit();
 	return *this;
 
 }
@@ -318,7 +365,7 @@ complex<T> Polinomial<T>::calculate(const complex<T> x) const {
 	complex<T> result = 0;
 	for (int i = 0; i <= _degree; ++i) {
 		result.real() += _coeff[i].real() * pow(x.real(), i);
-		result.imag() += _coeff[i].imag() * pow(x.imag(), i);
+		result.imag() += _coeff[i].imag() * pow(x.real(), i);
 	}
 	return result;
 }
@@ -326,8 +373,9 @@ complex<T> Polinomial<T>::calculate(const complex<T> x) const {
 template<typename T>
 bool Polinomial<T>::shrink_to_fit() {
 	int count = 0;
+	T zero = { 0 };
 	for (int i = _degree; i > 0; --i) {
-		if (_coeff[i] == 0)
+		if (_coeff[i] == zero)
 			++count;
 		else break;
 	}
@@ -345,34 +393,16 @@ bool Polinomial<T>::shrink_to_fit() {
 	return true;
 }
 
-template<typename T>
-bool Polinomial<T>::expand(const int degree) {
-	if (degree <= _degree)
-		return false;
-	T* new_coeff = new T[degree + 1];
-	for (int i = 0; i <= _degree; ++i) {
-		new_coeff[i] = _coeff[i];
-		
-	}
-	_degree = degree;
-	delete[] _coeff;
-	_coeff = new_coeff;
-	return true;
-}
+
 
 template<typename T>
 bool Polinomial<T>::operator==(const Polinomial<T>& other) const {
-	Polinomial<T> this_copy(*this);
-	Polinomial<T> other_copy(other);
 
-	this_copy.shrink_to_fit();
-	other_copy.shrink_to_fit();
-
-	if (this_copy._degree != other_copy._degree)
+	if (_degree != other._degree)
 		return false;
 
-	for (int i = 0; i <= this_copy._degree; ++i) {
-		if ((this_copy._coeff[i] - other_copy._coeff[i]) > ACCURACY)
+	for (int i = 0; i <=_degree; ++i) {
+		if (fabs(_coeff[i] - other._coeff[i]) > ACCURACY)
 			return false;
 	}
 	return true;
@@ -380,20 +410,16 @@ bool Polinomial<T>::operator==(const Polinomial<T>& other) const {
 
 template<typename T>
 bool Polinomial<T>::operator==(const Polinomial<complex<T>>& other) const {
-	Polinomial<complex<T>> this_copy(*this);
-	Polinomial<complex<T>> other_copy(other);
-
-
-	if (this_copy._degree != other_copy._degree)
+	
+	if (_degree != other._degree)
 		return false;
 
-	for (int i = 0; i <= this_copy._degree; ++i) {
-		if (this_copy._coeff[i].real() - other_copy._coeff[i].real() > ACCURACY)
+	for (int i = 0; i <= this._degree; ++i) {
+		if ((fabs(_coeff[i].real() - other._coeff[i].real()) > ACCURACY) && (fabs(_coeff[i].imag() - other._coeff[i].imag())> ACCURACY))
 			return false;
 	}
 	return true;
 }
-
 
 template<typename T>
 bool Polinomial<T>::operator!=(const Polinomial<T>& other) const {
@@ -420,7 +446,7 @@ std::ostream& operator<<(std::ostream& os, const Polinomial<complex<T>>& poly) {
 		if ((poly.get_coeff(i).real() == 0) && (poly.get_coeff(i).imag() == 0))
 			continue;
 	}
-	os << "(" << poly.get_coeff(0).real() << "+" << poly.get_coeff(0).imag() << "i" << ")x^" << endl;
+	os << "(" << poly.get_coeff(0).real() << "+" << poly.get_coeff(0).imag() << "i" << ")" << endl;
 
 
 
@@ -443,83 +469,65 @@ std::ostream& operator<<(std::ostream& os, const Polinomial<T> poly) {
 }
 
 template<typename T>
-T find_zero(T d, T a, T b, T c) {
-	T x[3];
-	T q, r, r2, q3;
-	q = (a * a - 3. * b) / 9.;
-	r = ((2. * a * a - 9. *a * b) + 27. * c) / 54.;
-	r2 = r * r;
-	q3 = q * q * q;
-	if (r2 < q3) {
-		T t = acos(r / sqrt(q3))/3.;
-		q = -2. * sqrt(q);
-		x[0] = q * cos(t / 3.) -(a/3.);
-		x[1] = q * cos((t + M_2PI) / 3.) - (a / 3.);
-		x[2] = q * cos((t - M_2PI) / 3.) - (a / 3.);
-		for (int i=0; i <= 2; ++i) {
-			return x[i];
-		}
-	}
-	else {
-		T aa, bb;
-		if (r <= 0.) 
-			r = -r;
-		aa = -pow(r + sqrt(r2 - q3), 1. / 3.);
-		if (aa != 0.) 
-			bb = q / aa;
-		else bb = 0.;
-		q = aa + bb;
-		r = aa - bb;
-		x[0] = q - a/3.;
-		x[1] = (-0.5) * q - a/3.;
-		x[2] = (sqrt(3.) * 0.5) * fabs(r);
-		if (x[2] == 0.)
-		{
-			for (int i=0; i <= 1; ++i) {
-				return x[i];
-			}
-		}
-		
-		return x[0];
+T find_zero( T a, T b, T c, T d) {
+	T p, q;
+	std::complex< double > w2(-0.5, sqrt(3)/2);
+	std::complex< double > w3(-0.5, -sqrt(3) / 2);
+	p = ( - (b * b / (3 * a * a)) + (c / a));
 	
+	q = (((2 * b * b* b) / (27 * a * a * a)) - ((b * c) / (3 * a * a)) + (d / a));
+	double Q;
+	Q = ((p*p*p/27.) +(q*q/4.));
+	T A, B;
+	double x1, x2, x3, x2real, x3real, x2im, x3im, y1, y2, y3;
+	A = pow(((-q / 2.) + sqrt(Q)), 1 / 3.);
+	B = pow(((-q / 2.) - sqrt(Q)), 1 / 3.);
+	cout << "Дискриминант кубического уравнения Q :" << Q<<endl;
+	if (Q > 0) {
+		y1 = A + B;
+		x1 = y1 - (b / 3. * a);
 
+		cout << "Уравнение имеет один действительный корень: X1=" << x1<<endl;
 	}
-}
-/*template<typename T>
-T find_zero(T a, T b, T c, T d)
-{
-	T discr = (b * b) - (3 * a * c);
-
-	if (a == 0 || discr < 0) {
-		std::cout << "Нет действительных корней" << endl;
-		return;
-	}
-
-	T x1, x2, x3;
-
-	if (discr == 0) {
-		x1 = (-b / (3 * a));
-		std::cout << "Один действительный корень: " << x1 << endl;
-	}
-	if (discr > 0) {
-		T disc_sqrt = sqrt(discr);
-		T temp;
-		temp = (-b + disc_sqrt) / (3 * a);
-		x1 = temp;
-		temp = (-b - disc_sqrt) / (3 * a);
-		if (temp != x1) {
-			x2 = temp;
-			std::cout << "Два действительных корня: " << x1 << ", " << x2 << endl;
+	if (Q == 0) {
+		y1 = ( - 2. * pow((q / 2.), 1 / 3.));
+		y2= pow((q / 2.), 1 / 3.);
+		y3 = pow((q / 2.), 1 / 3.);
+		if (b == 0.) {
+			cout << "Уравнение имеет три действительных корня:" << endl;
+			cout<< "X1=" << y1 << endl;
+			cout << "X2=" << y2 << endl;
+			cout << "X3=" << y3 << endl;
 		}
 		else {
-			std::cout << "Один действительный корень: " << x1 << endl;
-		};
-
-	} return x1;
-}*/
-
-
-
+			x1 = (y1 - (b / 3. * a));
+			x2 = (y2 - (b / 3. * a));
+			x3 = (y3 - (b / 3. * a));
+			cout << "Уравнение имеет три действительных корня:" << endl;
+			cout<< "X1=" <<x1 << endl;
+			cout << "X2=" << x2 << endl;
+			cout << "X3=" << x3 << endl;
+		}
+	}
+	if (Q < 0) {
+		double i, j, k, l, m, n, f;
+		i = pow((((q * q) / 4) - Q), 0.5);
+		j = pow(i, 0.33333333333333333333333333333333); 
+		k = acos((q / (2 * i)) * -1);
+		l = j * -1;
+		m = cos(k / 3);
+		n = sqrt(3) * sin(k / 3);
+		f = (b / (3 * a)) * -1;
+		x1 = (2 * j) * m - (b / (3 * a));
+		cout << "x1 = " << x1 << endl;
+		x2 = l * (m + n) + f;
+		cout << "x2 = " << x2 << endl;
+		x3 = l * (m - n) + f;
+		cout << "x3 = " << x3 << endl;
+		
+	};
+	return 0;
+}
 
 
 int main() {
@@ -532,22 +540,33 @@ int main() {
 	l.set_coeff(5, 3);
 	std::cout << l;
 
-	Polinomial<double> t = Polinomial<double>(3);
+	Polinomial<double> t = Polinomial<double>(4);
 	t.set_coeff(2, 2);
 	t.set_coeff(6, 1);
 	t.set_coeff(7, 3);
+	t.set_coeff(7, 4);
 	std::cout << t;
 
 	std::cout << "Сложение многочленов:" << endl;
 	Polinomial<double> c = t + l;
-	std::cout << c;
+	std::cout << (l+=t);
 	
 	std::cout << "Вычитание многочленов:" << endl;
-	Polinomial<double> d= t -l;
+	Polinomial<double> w = Polinomial<double>(4);
+	w.set_coeff(1, 2);
+	w.set_coeff(2, 1);
+	w.set_coeff(1, 3);
+	w.set_coeff(7, 4);
+	std::cout << t;
+	Polinomial<double> d= l-w;
 	std::cout << d;
 
+	Polinomial<double> k = Polinomial<double>(3);
+	k.set_coeff(3, 2);
+	k.set_coeff(4, 1);
+	k.set_coeff(5, 3);
 	std::cout << "Вычисление значения при фиксированном значении х:" << endl;
-	std::cout << l.calculate(4)<<endl;
+	std::cout << k.calculate(4)<<endl;
 	
 	Polinomial<double> a = Polinomial<double>(3);
 	a.set_coeff(3, 2);
@@ -583,11 +602,15 @@ int main() {
 	std::cout << (f != l) << endl;
 
 	Polinomial <std::complex<double>> v = Polinomial <std::complex<double>>(3);
+	v.set_coeff(4, 2, 2);
+	v.set_coeff(1, 1, 1);
+	v.set_coeff(2, 5, 3);
 	std::cout << v;
 
 	Polinomial <std::complex<double>> s = Polinomial <std::complex<double>>(3);
 	s.set_coeff( 3, 2, 2);
 	s.set_coeff(3, 4, 1);
+	s.set_coeff(3, 4, 3);
 	std::cout << s;
 	std::cout << "Сложение и вычитание комплексных многочленов:"<<endl;
 	Polinomial <std::complex<double>> m = s + v;
@@ -597,11 +620,28 @@ int main() {
 
 	Polinomial<double> r = Polinomial<double>(3);
 	r.set_coeff(1, 3);
-	r.set_coeff(-3, 2);
-	r.set_coeff(-10, 1);
-	r.set_coeff(24, 0);
+	r.set_coeff(0, 2);
+	r.set_coeff(-12, 1);
+	r.set_coeff(16, 0);
 	std::cout << r << endl;
-	std::cout << find_zero(0, -3, -10, 24);
+
+	std::cout << find_zero(1, 0, -12, 16)<<endl;
+
+	Polinomial<double> two = Polinomial<double>(3);
+	two.set_coeff(1, 3);
+	two.set_coeff(3, 2);
+	two.set_coeff(-3, 1);
+	two.set_coeff(-14, 0);
+	std::cout << two << endl;
+
+	std::cout << find_zero(1, 3, -3, -14)<<endl;
+	Polinomial<double> tree = Polinomial<double>(3);
+	tree.set_coeff(1, 3);
+	tree.set_coeff(0, 2);
+	tree.set_coeff(-19, 1);
+	tree.set_coeff(30, 0);
+	std::cout << tree << endl;
+	std::cout << find_zero(1, 0, -19, 30)<<endl;
 
 
 	return 0;
